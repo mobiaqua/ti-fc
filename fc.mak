@@ -85,7 +85,9 @@ XDCARGS= \
     ti.targets.elf.C64T=\"$(ti.targets.elf.C64T)\" \
     ti.targets.elf.C66=\"$(ti.targets.elf.C66)\" \
     ti.targets.elf.C66_big_endian=\"$(ti.targets.elf.C66_big_endian)\" \
-    ti.targets.elf.C674=\"$(ti.targets.elf.C674)\"
+    ti.targets.elf.C674=\"$(ti.targets.elf.C674)\" \
+    gnu.targets.arm.M3=\"$(gnu.targets.arm.M3)\" \
+    gnu.targets.arm.M4=\"$(gnu.targets.arm.M4)\"
 
 #
 # Get list of packages to rebuild.  Using LIST allows SDKs to only build
