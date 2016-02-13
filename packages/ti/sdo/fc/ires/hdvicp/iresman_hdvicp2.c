@@ -268,7 +268,7 @@ __FAR__ static IGateProvider_Handle gate = NULL;
 static void getInternalState();
 static void setInternalState();
 static void freeInternalState();
-static inline Void freeRes(Int Id, IALG_Handle alg, Int scratchGroupId);
+static inline Void freeRes(XDAS_Int32 Id, IALG_Handle alg, Int scratchGroupId);
 
 static Void _acquireSpecific(XDAS_Int32 Id, IALG_Handle alg,
         XDAS_UInt32 *reloadHDVICP, XDAS_UInt32 * configurationId,
