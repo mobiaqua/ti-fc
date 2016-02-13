@@ -270,10 +270,10 @@ static void setInternalState();
 static void freeInternalState();
 static inline Void freeRes(Int Id, IALG_Handle alg, Int scratchGroupId);
 
-static Void _acquireSpecific(Int Id, IALG_Handle alg,
+static Void _acquireSpecific(XDAS_Int32 Id, IALG_Handle alg,
         XDAS_UInt32 *reloadHDVICP, XDAS_UInt32 * configurationId,
         IRES_HDVICP2_Handle h);
-static Void _acquireSpecificPlugin(Int Id, IALG_Handle alg,
+static Void _acquireSpecificPlugin(XDAS_Int32 Id, IALG_Handle alg,
         XDAS_UInt32 *reloadHDVICP, XDAS_UInt32 *configurationId,
         IRES_HDVICP2_Handle h);
 
