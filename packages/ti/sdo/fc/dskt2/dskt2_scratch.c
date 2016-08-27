@@ -167,7 +167,7 @@ Void _DSKT2_init()
     Registry_Result regResult;
 #endif
     GateMutexPri_Handle h;
-    int _regInit = 0;
+    static int _regInit = 0;
 
     if (!_DSKT2_initialized) {
         /*

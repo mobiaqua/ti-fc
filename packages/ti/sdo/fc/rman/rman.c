@@ -1493,8 +1493,8 @@ static void getInternalState()
     static RMAN_InternalState _RMAN_internalState;
     rmanInternalState = (RMAN_InternalState *)
             &_RMAN_internalState;
-    algresVTable = (RMAN_VtableEntry *)(malloc(ti_sdo_fc_rman_RMAN_MAXALGS *
-            sizeof(RMAN_VtableEntry)));
+    algresVTable = (RMAN_VtableEntry *)(myAlloc(ti_sdo_fc_rman_RMAN_MAXALGS *
+            sizeof(RMAN_VtableEntry), 0));
     setInternalState(rmanInternalState);
     sharedMemId = 0;
 #endif
@@ -1513,7 +1513,7 @@ static void freeInternalState()
     SHM_freeObj(rmanInternalState, rmanInternalState->info.sharedMemId);
 #else
     if (algresVTable) {
-        free(algresVTable);
+        myFree(algresVTable, ti_sdo_fc_rman_RMAN_MAXALGS * sizeof(RMAN_VtableEntry));
         algresVTable = NULL;
     }
 

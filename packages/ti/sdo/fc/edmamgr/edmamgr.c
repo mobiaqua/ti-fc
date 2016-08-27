@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Texas Instruments Incorporated
+ * Copyright (c) 2013-2016, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,16 @@ static IRES_ProtocolRevision _iresEDMA3ChanRevision =
 #define EDMA_MGR_MAX_NUM_CHANNELS     32
 
 EdmaMgr_Channel EdmaMgr_channels[EDMA_MGR_MAX_NUM_CHANNELS];
+
+typedef struct _EdmaMgr_SaveInfo {
+  EdmaMgr_Handle               handle;
+  int32_t                      numPaRams;
+  uint32_t                     optChained;
+  IALG_MemRec                  addrTable;
+  EdmaMgr_Channel             *chainedChannel;
+} EdmaMgr_SaveInfo;
+
+static EdmaMgr_SaveInfo EdmaMgr_saveInfo[EDMA_MGR_MAX_NUM_CHANNELS];
 
 extern __FAR__ int32_t *ti_sdo_fc_edmamgr_region2Instance;
 extern __FAR__ EDMA3_GblConfigParams *ti_sdo_fc_edmamgr_edma3GblConfigParams;
@@ -390,6 +400,110 @@ int32_t EdmaMgr_free(EdmaMgr_Handle h)
       }
 
       chan = chainedChan;
+    }
+
+    return ret_val;
+}
+
+
+/*********************************************************************************
+ * FUNCTION PURPOSE: Free EdmaMgr HW resources
+ *********************************************************************************
+  DESCRIPTION:      This function frees HW resources for all EDMA channels
+
+  Parameters :      Inputs:
+
+                    Output: EdmaMgr_SUCCESS if free is successful;
+                            Error code otherwise.
+ *********************************************************************************/
+int32_t EdmaMgr_hwFreeAll()
+{
+    int32_t i, ret_val = EdmaMgr_SUCCESS;
+    EdmaMgr_Channel *chan;
+    EdmaMgr_SaveInfo *saveInfo;
+    IRES_Status ires_status;
+
+    memset(EdmaMgr_saveInfo, 0, sizeof(EdmaMgr_SaveInfo)*EDMA_MGR_MAX_NUM_CHANNELS);
+
+    for (i = 0; i < EDMA_MGR_MAX_NUM_CHANNELS; i++) {
+        chan = &EdmaMgr_channels[i];
+
+        /* Save info for recovering the EDMA channels */
+        if (chan->edmaArgs.numPaRams > 0) {
+
+            saveInfo = &EdmaMgr_saveInfo[i];
+
+            saveInfo->numPaRams = chan->edmaArgs.numPaRams;
+
+            saveInfo->handle = (EdmaMgr_Handle) chan;
+
+            /* Save info for a large channel*/
+            if (chan->chainedChannel != NULL) {
+                saveInfo->chainedChannel = chan->chainedChannel;
+            }
+
+            if (chan->addrTable.base != NULL) {
+                memcpy(&saveInfo->addrTable, &chan->addrTable, sizeof(IALG_MemRec));
+            }
+
+            saveInfo->optChained = chan->optChained;
+
+            /* Free EdmaMgr channel */
+            ret_val = EdmaMgr_free((EdmaMgr_Handle)chan);
+            if (ret_val != EdmaMgr_SUCCESS) {
+                return ret_val;
+            }
+        }
+    }
+
+    return ret_val;
+}
+
+/*********************************************************************************
+ * FUNCTION PURPOSE: Restore EdmaMgr HW resources
+ *********************************************************************************
+  DESCRIPTION:      This function restores HW resources for all EDMA channels
+
+  Parameters :      Inputs:
+
+                    Output: EdmaMgr_SUCCESS if restore is successful;
+                            Error code otherwise.
+ *********************************************************************************/
+int32_t EdmaMgr_hwAllocAll()
+{
+    int32_t i, ret_val = EdmaMgr_SUCCESS;
+    EdmaMgr_Channel *chan;
+    EdmaMgr_SaveInfo *saveInfo;
+    EdmaMgr_Handle   h;
+    IRES_Status ires_status;
+
+    for (i = 0; i < EDMA_MGR_MAX_NUM_CHANNELS; i++) {
+        saveInfo = &EdmaMgr_saveInfo[i];
+
+        /* Restore an EDMA channel */
+        if (saveInfo->numPaRams > 0) {
+            do {
+                h = EdmaMgr_alloc(saveInfo->numPaRams);
+                if (h == saveInfo->handle) {
+                    break;
+                } else {
+                    EdmaMgr_free (h);
+                }
+            } while (1);
+
+            chan = (EdmaMgr_Channel *)h;
+
+            /* Restore configurations for a large channel */
+            if (&saveInfo->addrTable.base != NULL) {
+                memcpy( &chan->addrTable, &saveInfo->addrTable, sizeof(IALG_MemRec));
+            }
+
+            chan->optChained = saveInfo->optChained;
+
+            if (saveInfo->chainedChannel) {
+                chan->chainedChannel = saveInfo->chainedChannel;
+            }
+        }
     }
 
     return ret_val;
